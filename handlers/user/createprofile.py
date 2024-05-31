@@ -3,6 +3,7 @@ from aiogram.types.message import ContentTypes
 from loader import dp, bot
 from states.states import StartUserStatesGroup, CreateUserProfileStatesGroup
 from keyboards.user import warning_keyboard, cancel_keyboard, yes_keyboard, yes_no_keyboard
+from databases import edit_user_id, edit_user_profile
 from aiogram.dispatcher import FSMContext
 # TODO: Implement data retrieval and storage in the database.
 
@@ -34,6 +35,7 @@ async def break_creating(message: types.Message, state: FSMContext) -> None:
 @dp.message_handler(state=CreateUserProfileStatesGroup.create_init)
 async def name_request(message: types.Message) -> None:
     await CreateUserProfileStatesGroup.name.set()
+    await edit_user_id(user_id=message.from_user.id)
     await bot.send_message(chat_id=message.from_user.id,
                            reply_markup=cancel_keyboard(),
                            text="What is your name?")
@@ -77,7 +79,7 @@ async def location_request(message: types.Message, state: FSMContext) -> None:
 @dp.message_handler(state=CreateUserProfileStatesGroup.city)
 async def description_request(message: types.Message, state: FSMContext) -> None:
     async with state.proxy() as data:
-        data['loc'] = message.text
+        data['location'] = message.text
 
     await CreateUserProfileStatesGroup.description.set()
     await bot.send_message(chat_id=message.from_user.id,
@@ -91,7 +93,7 @@ async def description_request(message: types.Message, state: FSMContext) -> None
 @dp.message_handler(state=CreateUserProfileStatesGroup.description)
 async def photo_request(message: types.Message, state: FSMContext) -> None:
     async with state.proxy() as data:
-        data['desc'] = message.text
+        data['description'] = message.text
     await CreateUserProfileStatesGroup.photo.set()
     await bot.send_message(chat_id=message.from_user.id,
                            reply_markup=cancel_keyboard(),
@@ -114,8 +116,8 @@ async def profile_create(message: types.Message, state: FSMContext):
 
         await bot.send_photo(chat_id=message.from_user.id,
                              photo=data['photo'],
-                             caption=f"{data['name']}, {data['age']}, {data['loc']}:\n"
-                                     f"{data['desc']}")
+                             caption=f"{data['name']}, {data['age']}, {data['location']}:\n"
+                                     f"{data['description']}")
 
         await CreateUserProfileStatesGroup.agreement.set()
         await bot.send_message(chat_id=message.from_user.id,
@@ -127,6 +129,7 @@ async def profile_create(message: types.Message, state: FSMContext):
 @dp.message_handler(state=CreateUserProfileStatesGroup.agreement)
 async def people_search(message: types.Message, state: FSMContext):
     if message.text == "Yes":
+        await edit_user_profile(state, user_id=message.from_user.id)
         await bot.send_message(chat_id=message.from_user.id,
                                text='Done!')
     elif message.text == "No":
