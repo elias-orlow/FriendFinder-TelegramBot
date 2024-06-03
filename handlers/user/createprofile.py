@@ -1,11 +1,11 @@
 from aiogram import types
 from aiogram.types.message import ContentTypes
-from loader import dp, bot
-from states.states import StartUserStatesGroup, CreateUserProfileStatesGroup
-from keyboards.user import warning_keyboard, cancel_keyboard, yes_keyboard, yes_no_keyboard
-from databases import edit_user_id, edit_user_profile
 from aiogram.dispatcher import FSMContext
-# TODO: Implement data retrieval and storage in the database.
+
+from loader import dp, bot
+from states import StartUserStatesGroup, CreateUserProfileStatesGroup, PeopleSearch
+from keyboards import warning_keyboard, cancel_keyboard, yes_keyboard, yes_no_keyboard, start_search_keyboard
+from databases import edit_user_id, edit_user_profile
 
 
 # Sending a warning message
@@ -102,7 +102,7 @@ async def photo_request(message: types.Message, state: FSMContext) -> None:
 
 # Photo check
 @dp.message_handler(state=CreateUserProfileStatesGroup.photo)
-async def photo(message: types.Message):
+async def photo(message: types.Message) -> None:
     await bot.send_message(chat_id=message.from_user.id,
                            reply_markup=cancel_keyboard(),
                            text='It is not a photo!')
@@ -110,7 +110,7 @@ async def photo(message: types.Message):
 
 # Getting user's photo and sending the profile
 @dp.message_handler(content_types=ContentTypes.PHOTO, state=CreateUserProfileStatesGroup.photo)
-async def profile_create(message: types.Message, state: FSMContext):
+async def profile_create(message: types.Message, state: FSMContext) -> None:
     async with state.proxy() as data:
         data['photo'] = message.photo[0].file_id
 
@@ -127,11 +127,19 @@ async def profile_create(message: types.Message, state: FSMContext):
 
 # TODO: Create people search
 @dp.message_handler(state=CreateUserProfileStatesGroup.agreement)
-async def people_search(message: types.Message, state: FSMContext):
+async def people_search(message: types.Message, state: FSMContext) -> None:
     if message.text == "Yes":
         await edit_user_profile(state, user_id=message.from_user.id)
+        await PeopleSearch.start.set()
         await bot.send_message(chat_id=message.from_user.id,
-                               text='Done!')
+                               text='How to interact with bot: \n\n'
+                                    '\U00002764 - like profile \n'
+                                    '\U0001F48C - send a message to profile \n'
+                                    '\U0001F44E - skip \n',
+                               reply_markup=start_search_keyboard())
+        async with state.proxy() as data:
+            data['offset'] = -1
+
     elif message.text == "No":
         current_state = await state.get_state()
         if current_state is None:

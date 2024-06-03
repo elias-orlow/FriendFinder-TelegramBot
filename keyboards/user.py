@@ -35,3 +35,24 @@ def cancel_keyboard() -> ReplyKeyboardMarkup:
     kb.add(KeyboardButton("/cancel"))
 
     return kb
+
+
+def start_search_keyboard() -> ReplyKeyboardMarkup:
+    kb = ReplyKeyboardMarkup(resize_keyboard=True)
+    kb.add(KeyboardButton("Clear \U0001F44C"))
+
+    return kb
+
+
+def rate_keyboard() -> ReplyKeyboardMarkup:
+    kb = ReplyKeyboardMarkup(resize_keyboard=True)
+    kb.row(KeyboardButton("❤️"), KeyboardButton("💌"), KeyboardButton("👎"))
+
+    return kb
+
+
+def again_keyboard() -> ReplyKeyboardMarkup:
+    kb = ReplyKeyboardMarkup(resize_keyboard=True)
+    kb.add(KeyboardButton("Try again! \U0001F97A"))
+
+    return kb

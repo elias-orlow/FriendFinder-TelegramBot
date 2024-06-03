@@ -1,8 +1,8 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from loader import dp, bot
-from states.states import StartUserStatesGroup
-from keyboards.user import start_keyboard
+from states import StartUserStatesGroup
+from keyboards import start_keyboard
 
 
 @dp.message_handler(commands=['start'], state='*')

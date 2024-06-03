@@ -14,3 +14,8 @@ class CreateUserProfileStatesGroup(StatesGroup):
     photo = State()
     finish = State()
     agreement = State()
+
+
+class PeopleSearch(StatesGroup):
+    start = State()
+    search = State()
